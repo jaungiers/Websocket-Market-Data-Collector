@@ -6,9 +6,9 @@ import hashlib
 from time import sleep
 from datetime import datetime
 
-chunkFilepath = 'datachunk.csv'
-datapackFilepath = 'datapack.h5'
-checksumFilepath = 'datachunk.m5sum'
+chunkFilepath = 'datachunkBitmex.csv'
+datapackFilepath = 'datapackBitmex.h5'
+checksumFilepath = 'datachunkBitmex.m5sum'
 md5sum = None
 depth = 5
 init_chunk_size = 10000
