@@ -58,10 +58,10 @@ public class DataCollectorBitmex extends WebSocketClient {
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
-        System.out.println("Connected to websocket");
+        System.out.println("[" + getDatetime() + "] Connected to websocket");
         String subscriptionReq = "{\"op\": \"subscribe\", \"args\": [\"orderBook10:" + instrument + "\", \"trade:" + instrument + "\"]}";
         send(subscriptionReq);
-        System.out.println("Attempting to subscribe to " + instrument);
+        System.out.println("[" + getDatetime() + "] Attempting to subscribe to " + instrument);
         // if you plan to refuse connection based on ip or httpfields overload: onWebsocketHandshakeReceivedAsClient
     }
 
@@ -71,7 +71,7 @@ public class DataCollectorBitmex extends WebSocketClient {
         if(dataObj.has("table")) {
             JSONObject dataObjArr = dataObj.getJSONArray("data").getJSONObject(0);
             if(!dataObjArr.getString("symbol").equals(instrument)) {
-                System.out.println("Socket symbol does not match " + instrument);
+                System.out.println("[" + getDatetime() + "] Socket symbol does not match " + instrument);
                 return;
             }
 
@@ -80,7 +80,7 @@ public class DataCollectorBitmex extends WebSocketClient {
             if(tsXchng < tsXchngLast && tsXchngLast > 0){
                 totalDroppedCounter++;
                 chunkDroppedCounter++;
-                System.out.println("Dropping data because timestamp behind latest. Current drop counts Chunk: " + chunkDroppedCounter + " Total: " + totalDroppedCounter);
+                System.out.println("[" + getDatetime() + "] Dropping data because timestamp behind latest. Current drop counts Chunk: " + chunkDroppedCounter + " Total: " + totalDroppedCounter);
                 return;
             }
 
@@ -95,7 +95,7 @@ public class DataCollectorBitmex extends WebSocketClient {
 
             if(dataObj.getString("table").equals("trade")) {
                 if(dataObjArr.getInt("size") == 0) {
-                    System.out.println("Dropping trade with size 0");
+                    System.out.println("[" + getDatetime() + "] Dropping trade with size 0");
                     return;
                 }
                 isSell = dataObjArr.getString("side").equals("Sell") ? -1 : 1;
@@ -130,19 +130,24 @@ public class DataCollectorBitmex extends WebSocketClient {
             }
             chunkDroppedCounter = dataChunk.append(tsLocal, tsXchng, bids, vbids, asks, vasks, isSell, last, vlast, tickDir, homeNotional, foreignNotional, grossValue, chunkDroppedCounter);
         } else {
-            System.out.println("Received: " + dataStr);
+            System.out.println("[" + getDatetime() + "] Received: " + dataStr);
         }
     }
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        System.out.println("Connection closed by " + (remote ? "remote" : "local") + " Code: " + code + " Reason: " + reason);
+        System.out.println("[" + getDatetime() + "] Connection closed by " + (remote ? "Remote" : "Local") + " | Code: " + code + " | Reason: " + reason);
     }
 
     @Override
     public void onError(Exception e) {
-        System.out.println("Error thrown");
+        System.out.println("[" + getDatetime() + "] Error thrown");
         e.printStackTrace();
+    }
+
+    public String getDatetime() {
+        String datetime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(new Date());
+        return datetime;
     }
 
     public Long parseTimestamp(String datetime) {
@@ -152,7 +157,7 @@ public class DataCollectorBitmex extends WebSocketClient {
             Date parsedDate = dateFormat.parse(datetime);
             timestamp = new Timestamp(parsedDate.getTime());
         } catch(Exception e) {
-            System.out.println("Error parsing remote timestamp");
+            System.out.println("[" + getDatetime() + "] Error parsing remote timestamp");
             e.printStackTrace();
         }
         return timestamp.getTime();
